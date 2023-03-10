@@ -91,9 +91,11 @@ public class RoleAttributeMapper extends AbstractOIDCProtocolMapper implements O
     }
 
     private Stream<RoleModel> getUserRolesStream(RealmModel realm, UserModel user, String clientId) {
-        return realm.getRolesStream()
-                .filter(r -> clientId == null || r.isClientRole() && r.getContainerId().equals(clientId))
-                .filter(user::hasRole);
+        Stream<RoleModel> roles = clientId == null
+                ? realm.getRolesStream()
+                : realm.getClientByClientId(clientId).getRolesStream();
+
+        return roles.filter(user::hasRole);
     }
 
     private List<String> resolveAttribute(RoleModel role, String name) {

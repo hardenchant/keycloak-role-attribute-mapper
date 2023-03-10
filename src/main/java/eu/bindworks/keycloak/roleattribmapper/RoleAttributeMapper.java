@@ -32,10 +32,15 @@ public class RoleAttributeMapper extends AbstractOIDCProtocolMapper implements O
     static {
         configProperties = new ArrayList<>();
 
-
         ProviderConfigProperty property;
 
-        // Username
+        property = new ProviderConfigProperty();
+        property.setName(ProtocolMapperUtils.USER_MODEL_CLIENT_ROLE_MAPPING_CLIENT_ID);
+        property.setLabel(ProtocolMapperUtils.USER_MODEL_CLIENT_ROLE_MAPPING_CLIENT_ID_LABEL);
+        property.setHelpText(ProtocolMapperUtils.USER_MODEL_CLIENT_ROLE_MAPPING_CLIENT_ID_HELP_TEXT);
+        property.setType(ProviderConfigProperty.CLIENT_LIST_TYPE);
+        configProperties.add(property);
+
         property = new ProviderConfigProperty();
         property.setName(PROPERTY_ROLE_ATTRIBUTE);
         property.setLabel("Role attribute name");
@@ -85,16 +90,18 @@ public class RoleAttributeMapper extends AbstractOIDCProtocolMapper implements O
         return "Map a custom role attribute to a token claim";
     }
 
-    private Stream<RoleModel> getUserRolesStream(RealmModel realm, UserModel user) {
-        return realm.getRolesStream().filter(r -> user.hasRole(r));
+    private Stream<RoleModel> getUserRolesStream(RealmModel realm, UserModel user, String clientId) {
+        return realm.getRolesStream()
+                .filter(r -> clientId == null || r.isClientRole() && r.getContainerId().equals(clientId))
+                .filter(user::hasRole);
     }
 
     private List<String> resolveAttribute(RoleModel role, String name) {
         return role.getAttributeStream(name).collect(Collectors.toList());
     }
 
-    private Collection<String> resolveAttribute(RealmModel realm, UserModel user, String name, boolean aggregateAttrs) {
-        Stream<List<String>> attributes = getUserRolesStream(realm, user)
+    private Collection<String> resolveAttribute(RealmModel realm, UserModel user, String clientId, String name, boolean aggregateAttrs) {
+        Stream<List<String>> attributes = getUserRolesStream(realm, user, clientId)
                 .map((group) -> resolveAttribute(group, name))
                 .filter(Objects::nonNull)
                 .filter((attr) -> !attr.isEmpty());
@@ -110,8 +117,9 @@ public class RoleAttributeMapper extends AbstractOIDCProtocolMapper implements O
     protected void setClaim(IDToken token, ProtocolMapperModel mappingModel, UserSessionModel userSession, KeycloakSession keycloakSession, ClientSessionContext clientSessionCtx) {
         UserModel user = userSession.getUser();
         String attributeName = mappingModel.getConfig().get(PROPERTY_ROLE_ATTRIBUTE);
-        boolean aggregateAttrs = Boolean.valueOf(mappingModel.getConfig().get(ProtocolMapperUtils.AGGREGATE_ATTRS));
-        Collection<String> attributeValue = resolveAttribute(userSession.getRealm(), user, attributeName, aggregateAttrs);
+        boolean aggregateAttrs = Boolean.parseBoolean(mappingModel.getConfig().get(ProtocolMapperUtils.AGGREGATE_ATTRS));
+        String clientId = mappingModel.getConfig().get(ProtocolMapperUtils.USER_MODEL_CLIENT_ROLE_MAPPING_CLIENT_ID);
+        Collection<String> attributeValue = resolveAttribute(userSession.getRealm(), user, clientId, attributeName, aggregateAttrs);
         if (attributeValue == null) return;
         OIDCAttributeMapperHelper.mapClaim(token, mappingModel, attributeValue);
     }

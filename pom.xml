@@ -4,7 +4,7 @@
 
     <groupId>eu.bindworks.keycloak</groupId>
     <artifactId>keycloak-role-attribute-mapper</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -78,7 +78,7 @@
         <connection>scm:git:https://gitlab.com/bindworks/libs/keycloak-role-attribute-mapper.git</connection>
         <developerConnection>scm:git:git@gitlab.com:bindworks/libs/keycloak-role-attribute-mapper.git</developerConnection>
         <url>https://gitlab.com/bindworks/libs/keycloak-role-attribute-mapper/-/tree/${project.scm.tag}</url>
-        <tag>master</tag>
+        <tag>keycloak-role-attribute-mapper-1.0.0</tag>
     </scm>
 
     <repositories>

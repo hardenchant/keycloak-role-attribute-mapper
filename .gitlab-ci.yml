@@ -11,7 +11,7 @@ build:
     key: maven-cache
     paths:
       - ${CI_PROJECT_DIR}/.m2/repository
-  image: openjdk:11-ea-jdk
+  image: eclipse-temurin:21
   stage: build
   script:
     - ./scripts/package
